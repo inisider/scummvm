@@ -164,6 +164,8 @@ void AboutDialog::drawDialog() {
 //	g_gui.theme()->setDrawArea(Common::Rect(_x, _y, _x+_w, _y+_h));
 	Dialog::drawDialog();
 
+	setTextDrawableArea(Common::Rect(_x, _y, _x + _w, _y + _h)); // further U can use _textDrawableArea
+
 	// Draw text
 	// TODO: Add a "fade" effect for the top/bottom text lines
 	// TODO: Maybe prerender all of the text into another surface,
@@ -219,8 +221,13 @@ void AboutDialog::drawDialog() {
 		if (align == Graphics::kTextAlignCenter)
 			while (*str && *str == ' ')
 				str++;
-
-		if (*str && y > _y && y + g_gui.theme()->getFontHeight() < _y + _h)
+/*
+		debug("_x = %d, _y = %d, _w = %d, _h = %d", 
+			_x, _y, _w, _h);
+		debug("_xOff = %d, _yOff = %d",
+			_xOff, _yOff);
+*/		
+		if (*str /*&& y > _y && y + g_gui.theme()->getFontHeight() < _y + _h*/)
 			g_gui.theme()->drawText(Common::Rect(_x + _xOff, y, _x + _w - _xOff, y + g_gui.theme()->getFontHeight()), str, state, align, ThemeEngine::kTextInversionNone, 0, false);
 		y += _lineHeight;
 	}

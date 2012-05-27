@@ -624,6 +624,9 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 		}
 	}
 
+	debug("fontHeight = %d", font->getFontHeight());
+	debug("left = %d, top = %d, right = %d, bottom = %d", area.left, area.top, area.right, area.bottom);
+
 	font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
 }
 
