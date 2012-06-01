@@ -624,12 +624,23 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 		}
 	}
 
-	debug("textDrawableArea.left = %d, textDrawableArea.right = %d", 
-		   textDrawableArea.left, textDrawableArea.right);
-	// debug("fontHeight = %d", font->getFontHeight());
-	// debug("left = %d, top = %d, right = %d, bottom = %d", area.left, area.top, area.right, area.bottom);
+	if (textDrawableArea.isEmpty()) {
+		font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
+	} else {
+		// debug("top = %d, bottom = %d left = %d, right = %d", area.top, area.bottom, area.left, area.right);
 
-	font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
+		if (textDrawableArea.top >= area.top) {
+			// debug("area.top = %d, textDrawableArea.top = %d", area.top, textDrawableArea.top);
+			debug("top = %d", textDrawableArea.top - area.top);
+		}
+
+		if (area.bottom >= textDrawableArea.bottom) {
+			debug("bottom = %d", area.bottom - textDrawableArea.bottom);			
+		}
+
+		// debug("left = %d, top = %d, right = %d, bottom = %d", area.left, area.top, area.right, area.bottom);
+		font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
+	}
 }
 
 /** LINES **/

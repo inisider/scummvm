@@ -837,8 +837,6 @@ void ThemeEngine::queueDDText(TextData type, TextColor color, const Common::Rect
 	Common::Rect area = r;
 	area.clip(_screen.w, _screen.h);
 
-	// debug("drawableTextArea = %d", drawableTextArea.left);
-
 	ThemeItemTextData *q = new ThemeItemTextData(this, _texts[type], _textColors[color], area, drawableTextArea, text, alignH, alignV, ellipsis, restoreBg, deltax);
 
 	if (_buffering) {

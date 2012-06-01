@@ -173,7 +173,7 @@ void AboutDialog::drawDialog() {
 	//       in the right way. Should be even faster...
 	const int firstLine = _scrollPos / _lineHeight;
 	const int lastLine = MIN((_scrollPos + _h) / _lineHeight + 1, (uint32)_lines.size());
-	int y = _y + _yOff - (_scrollPos % _lineHeight);
+	int y = _y /*+ _yOff*/ - (_scrollPos % _lineHeight);
 
 	for (int line = firstLine; line < lastLine; line++) {
 		const char *str = _lines[line].c_str();
@@ -221,14 +221,14 @@ void AboutDialog::drawDialog() {
 		if (align == Graphics::kTextAlignCenter)
 			while (*str && *str == ' ')
 				str++;
-/*
-		debug("_x = %d, _y = %d, _w = %d, _h = %d", 
-			_x, _y, _w, _h);
-		debug("_xOff = %d, _yOff = %d",
-			_xOff, _yOff);
-*/		
+
+		// debug("_x = %d, _y = %d, _w = %d, _h = %d", 
+		// 	_x, _y, _w, _h);
+		// debug("_xOff = %d, _yOff = %d",
+		// 	_xOff, _yOff);
+
 		if (*str /*&& y > _y && y + g_gui.theme()->getFontHeight() < _y + _h*/)
-			g_gui.theme()->drawText(Common::Rect(_x + _xOff, y, _x + _w - _xOff, y + g_gui.theme()->getFontHeight()), str, state, align, ThemeEngine::kTextInversionNone, 0, false, ThemeEngine::kFontStyleBold, ThemeEngine::kFontColorNormal, true, _textDrawableArea);
+			g_gui.theme()->drawText(Common::Rect(_x /*+ _xOff*/, y, _x + _w /*- _xOff*/, y + g_gui.theme()->getFontHeight()), str, state, align, ThemeEngine::kTextInversionNone, 0, false, ThemeEngine::kFontStyleBold, ThemeEngine::kFontColorNormal, true, _textDrawableArea);
 		y += _lineHeight;
 	}
 }
