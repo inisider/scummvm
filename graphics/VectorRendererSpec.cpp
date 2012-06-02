@@ -626,20 +626,58 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 
 	if (textDrawableArea.isEmpty()) {
 		font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
-	} else {
-		// debug("top = %d, bottom = %d left = %d, right = %d", area.top, area.bottom, area.left, area.right);
+	} else {		
+		bool wasDrawInBackSurface = false;
 
-		if (textDrawableArea.top >= area.top) {
-			// debug("area.top = %d, textDrawableArea.top = %d", area.top, textDrawableArea.top);
-			debug("top = %d", textDrawableArea.top - area.top);
+		if (textDrawableArea.top > area.top) {
+			wasDrawInBackSurface = true;
+
+			Surface backSurface;
+			const Graphics::PixelFormat format(2, 5, 5, 5, 0, 10, 5, 0, 0);
+			backSurface.create(area.right - area.left, area.bottom - area.top, format);
+
+			font->drawString(&backSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
+
+			int x = area.left;
+			int y = area.top;
+			
+			uint16 *ptr = (uint16 *)backSurface.getBasePtr(x, y);
+			// uint16 *ptr = new uint16 [50];
+			memset(ptr, 0, 50);
+
+			uint16 *destptr = (uint16 *)_activeSurface->getBasePtr(250, 250);
+
+			for (int z = 0; z < textDrawableArea.top - area.top; z++) {
+				// debug("%d", area.right - area.left);
+  				memcpy(ptr, destptr, area.right - area.left);
+   				ptr += backSurface.pitch;
+   				destptr += _activeSurface->pitch;
+			}
+			// need copy to _activeSurface only visible part of string...
+			// hight of visible part = font->height - abs(textDrawable.top - area.top);
+
+			backSurface.free();
+			// debug("top = %d", textDrawableArea.top - area.top);
 		}
 
-		if (area.bottom >= textDrawableArea.bottom) {
-			debug("bottom = %d", area.bottom - textDrawableArea.bottom);			
+		if (area.bottom > textDrawableArea.bottom) {
+			wasDrawInBackSurface = true;
+
+			Surface backSurface;
+			const Graphics::PixelFormat format(2, 5, 5, 5, 0, 10, 5, 0, 0);
+			backSurface.create(area.right - area.left, area.bottom - area.top, format);
+
+			font->drawString(&backSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
+
+			// need copy to _activeSurface only visible part of string...
+			// hight of visible part = font->height - abs(textDrawable.bottom - area.bottom);
+
+			backSurface.free();
+			// debug("bottom = %d", area.bottom - textDrawableArea.bottom);			
 		}
 
-		// debug("left = %d, top = %d, right = %d, bottom = %d", area.left, area.top, area.right, area.bottom);
-		font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
+		if (!wasDrawInBackSurface)
+			font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
 	}
 }
 
