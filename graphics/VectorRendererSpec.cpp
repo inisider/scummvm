@@ -653,7 +653,7 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
    // 				ptr += backSurface.pitch;
 			// }
 
-			g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch, 0, 0, backSurface.w, backSurface.h);
+			g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch / backSurface.format.bytesPerPixel, 0, 0, backSurface.w, backSurface.h);
 			g_system->updateScreen();
 			// g_system->copyRectToScreen((byte *)backSurface.pixels, backSurface.pitch, 0, 0, backSurface.w, backSurface.h);
 			// need copy to _activeSurface only visible part of string...
