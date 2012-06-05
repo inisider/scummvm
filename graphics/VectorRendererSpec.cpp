@@ -641,17 +641,17 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 			font->drawString(&backSurface, text, 0/*area.left*/, 0/*offset*/, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
 
 			// [00:30:00 EEST] Eugene Sandulenko: const int pitch = Base::_activeSurface->pitch / Base::_activeSurface->format.bytesPerPixel;
-			// uint16 *ptr = (uint16 *)backSurface.getBasePtr(0, 0);
+			uint16 *ptr = (uint16 *)backSurface.getBasePtr(0, 0);
 			// // memset(ptr, 0x00, backSurface.h * backSurface.pitch * format.bytesPerPixel);
 
-			// uint16 *destptr = (uint16 *)_activeSurface->getBasePtr(area.left, area.top);
+			uint16 *destptr = (uint16 *)_activeSurface->getBasePtr(area.left, area.top);
 
-			// for (int z = 0; z < backSurface.h/*abs(textDrawableArea.top - area.top)*/; z++) {
+			for (int z = 0; z < abs(textDrawableArea.top - area.top); z++) {
 			// 	// debug("%d", area.right - area.left);
-  	// 			memcpy(destptr, ptr, backSurface.pitch/*area.right - area.left - deltax*/);
-   // 				destptr += _activeSurface->pitch;
-   // 				ptr += backSurface.pitch;
-			// }
+  	 			memcpy(destptr, ptr, backSurface.pitch / backSurface.format.bytesPerPixel/*area.right - area.left - deltax*/);
+				destptr += _activeSurface->pitch / _activeSurface->format.bytesPerPixel;
+				ptr += backSurface.pitch / backSurface.format.bytesPerPixel;
+			}
 
 			g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch / backSurface.format.bytesPerPixel, 0, 0, backSurface.w, backSurface.h);
 			g_system->updateScreen();
@@ -670,7 +670,7 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 			const Graphics::PixelFormat format(2, 5, 5, 5, 0, 10, 5, 0, 0);
 			backSurface.create(area.right - area.left, area.bottom - area.top, format);
 
-			font->drawString(&backSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
+			//font->drawString(&backSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
 
 			// uint16 *ptr = (uint16 *)backSurface.getBasePtr(0, 0);
 			// // memset(ptr, 0xff, 1500);
