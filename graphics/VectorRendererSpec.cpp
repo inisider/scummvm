@@ -633,26 +633,29 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 			wasDrawInBackSurface = true;
 
 			Surface backSurface;
-			const Graphics::PixelFormat format(2, 5, 5, 5, 0, 10, 5, 0, 0);
-			backSurface.create(area.right - area.left, area.bottom - area.top, format);
+			backSurface.create(area.right - area.left, area.bottom - area.top, g_system->getOverlayFormat());
 
-			font->drawString(&backSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
+			// const int pitch = backSurface.pitch / backSurface.format.bytesPerPixel;
+			// memset((uint16 *)backSurface.pixels, 0x00, backSurface.h * pitch * backSurface.format.bytesPerPixel);
 
-			int x = area.left;
-			int y = area.top;
-			
-			uint16 *ptr = (uint16 *)backSurface.getBasePtr(x, y);
-			// uint16 *ptr = new uint16 [50];
-			memset(ptr, 0, 50);
+			font->drawString(&backSurface, text, 0/*area.left*/, 0/*offset*/, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
 
-			uint16 *destptr = (uint16 *)_activeSurface->getBasePtr(250, 250);
+			// [00:30:00 EEST] Eugene Sandulenko: const int pitch = Base::_activeSurface->pitch / Base::_activeSurface->format.bytesPerPixel;
+			// uint16 *ptr = (uint16 *)backSurface.getBasePtr(0, 0);
+			// // memset(ptr, 0x00, backSurface.h * backSurface.pitch * format.bytesPerPixel);
 
-			for (int z = 0; z < textDrawableArea.top - area.top; z++) {
-				// debug("%d", area.right - area.left);
-  				memcpy(ptr, destptr, area.right - area.left);
-   				ptr += backSurface.pitch;
-   				destptr += _activeSurface->pitch;
-			}
+			// uint16 *destptr = (uint16 *)_activeSurface->getBasePtr(area.left, area.top);
+
+			// for (int z = 0; z < backSurface.h/*abs(textDrawableArea.top - area.top)*/; z++) {
+			// 	// debug("%d", area.right - area.left);
+  	// 			memcpy(destptr, ptr, backSurface.pitch/*area.right - area.left - deltax*/);
+   // 				destptr += _activeSurface->pitch;
+   // 				ptr += backSurface.pitch;
+			// }
+
+			g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch, 0, 0, backSurface.w, backSurface.h);
+			g_system->updateScreen();
+			// g_system->copyRectToScreen((byte *)backSurface.pixels, backSurface.pitch, 0, 0, backSurface.w, backSurface.h);
 			// need copy to _activeSurface only visible part of string...
 			// hight of visible part = font->height - abs(textDrawable.top - area.top);
 
@@ -669,6 +672,17 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 
 			font->drawString(&backSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
 
+			// uint16 *ptr = (uint16 *)backSurface.getBasePtr(0, 0);
+			// // memset(ptr, 0xff, 1500);
+
+			// uint16 *destptr = (uint16 *)_activeSurface->getBasePtr(area.left, area.top);
+
+			// for (int z = 0; z < backSurface.h/*abs(textDrawableArea.top - area.top)*/; z++) {
+			// 	// debug("%d", area.right - area.left);
+  	// 			memcpy(destptr, ptr, backSurface.pitch/*area.right - area.left - deltax*/);
+   // 				destptr += _activeSurface->pitch;
+   // 				ptr += backSurface.pitch;
+			// }
 			// need copy to _activeSurface only visible part of string...
 			// hight of visible part = font->height - abs(textDrawable.bottom - area.bottom);
 
