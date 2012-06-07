@@ -634,33 +634,32 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 
 			Surface backSurface;
 			backSurface.create(area.right - area.left, area.bottom - area.top, g_system->getOverlayFormat());
-
-			// const int pitch = backSurface.pitch / backSurface.format.bytesPerPixel;
-			// memset((uint16 *)backSurface.pixels, 0x00, backSurface.h * pitch * backSurface.format.bytesPerPixel);
-
-			font->drawString(&backSurface, text, 0/*area.left*/, 0/*offset*/, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
-
-			// [00:30:00 EEST] Eugene Sandulenko: const int pitch = Base::_activeSurface->pitch / Base::_activeSurface->format.bytesPerPixel;
-			uint16 *ptr = (uint16 *)backSurface.getBasePtr(0, 0);
-			// // memset(ptr, 0x00, backSurface.h * backSurface.pitch * format.bytesPerPixel);
-
-			uint16 *destptr = (uint16 *)_activeSurface->getBasePtr(area.left, area.top);
-
-			for (int z = 0; z < abs(textDrawableArea.top - area.top); z++) {
-			// 	// debug("%d", area.right - area.left);
-  	 			memcpy(destptr, ptr, backSurface.pitch / backSurface.format.bytesPerPixel/*area.right - area.left - deltax*/);
-				destptr += _activeSurface->pitch / _activeSurface->format.bytesPerPixel;
-				ptr += backSurface.pitch / backSurface.format.bytesPerPixel;
+			byte *activeSurfacePtr = (byte *)_activeSurface->getBasePtr(area.left, textDrawableArea.top);
+			byte *backSurfacePtr   = (byte *)backSurface.getBasePtr(0, 0);
+			for (int i = 0; i < backSurface.h; i++) {
+				memcpy(backSurfacePtr, activeSurfacePtr, backSurface.pitch); // ? where is / ?
+				activeSurfacePtr += _activeSurface->pitch /*/ _activeSurface->format.bytesPerPixel*/;
+				backSurfacePtr += backSurface.pitch /*/ backSurface.format.bytesPerPixel*/;
 			}
 
-			g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch / backSurface.format.bytesPerPixel, 0, 0, backSurface.w, backSurface.h);
+			// backSurfacePtr = (byte *)backSurface.getBasePtr(0, abs(area.top - textDrawableArea.top));
+			// memset(backSurfacePtr, 0, backSurface.pitch);
+
+			font->drawString(&backSurface, text, 0, 0, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
+
+			activeSurfacePtr = (byte *)_activeSurface->getBasePtr(area.left, textDrawableArea.top);
+			backSurfacePtr = (byte *)backSurface.getBasePtr(0, abs(area.top - textDrawableArea.top));
+
+			for (int i = 0; i < (backSurface.h - abs(area.top - textDrawableArea.top)); i++) {
+				memcpy(activeSurfacePtr, backSurfacePtr, backSurface.pitch);
+				activeSurfacePtr += _activeSurface->pitch;
+				backSurfacePtr += backSurface.pitch;
+			}
+
+			g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch / backSurface.format.bytesPerPixel, area.left, 0, backSurface.w, backSurface.h);
 			g_system->updateScreen();
-			// g_system->copyRectToScreen((byte *)backSurface.pixels, backSurface.pitch, 0, 0, backSurface.w, backSurface.h);
-			// need copy to _activeSurface only visible part of string...
-			// hight of visible part = font->height - abs(textDrawable.top - area.top);
 
 			backSurface.free();
-			// debug("top = %d", textDrawableArea.top - area.top);
 		}
 
 		if (area.bottom > textDrawableArea.bottom) {
