@@ -637,21 +637,42 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 			byte *activeSurfacePtr = (byte *)_activeSurface->getBasePtr(area.left, textDrawableArea.top);
 			byte *backSurfacePtr   = (byte *)backSurface.getBasePtr(0, 0);
 			for (int i = 0; i < backSurface.h; i++) {
-				memcpy(backSurfacePtr, activeSurfacePtr, backSurface.pitch); // ? where is / ?
-				activeSurfacePtr += _activeSurface->pitch /*/ _activeSurface->format.bytesPerPixel*/;
-				backSurfacePtr += backSurface.pitch /*/ backSurface.format.bytesPerPixel*/;
+				memcpy(backSurfacePtr, activeSurfacePtr, backSurface.pitch);
+
+				activeSurfacePtr += _activeSurface->pitch;
+				backSurfacePtr += backSurface.pitch;
 			}
 
-			// backSurfacePtr = (byte *)backSurface.getBasePtr(0, abs(area.top - textDrawableArea.top));
-			// memset(backSurfacePtr, 0, backSurface.pitch);
+			int textWidth = font->getStringWidth(text);
+
+			int emptySpace;
+			
+			switch (alignH) {
+				case Graphics::kTextAlignLeft:
+					emptySpace = 0;
+					break;
+				case Graphics::kTextAlignCenter:
+					emptySpace = (area.width() - textWidth) / 2;
+					break;
+				case Graphics::kTextAlignRight:
+					emptySpace =  area.right - textWidth - area.left;
+					debug("kTextAlignRight");
+					break;
+				// case Graphics::kTextAlignInvalid:
+				// 	warning("VectorRendererSpec<PixelType>::drawString(...) invalid text align");
+				// 	return;
+				default:
+					break;
+			}
 
 			font->drawString(&backSurface, text, 0, 0, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
 
-			activeSurfacePtr = (byte *)_activeSurface->getBasePtr(area.left, textDrawableArea.top);
-			backSurfacePtr = (byte *)backSurface.getBasePtr(0, abs(area.top - textDrawableArea.top));
+			activeSurfacePtr = (byte *)_activeSurface->getBasePtr(area.left + emptySpace, textDrawableArea.top);
+			backSurfacePtr = (byte *)backSurface.getBasePtr(emptySpace, abs(area.top - textDrawableArea.top));
 
-			for (int i = 0; i < (backSurface.h - abs(area.top - textDrawableArea.top)); i++) {
-				memcpy(activeSurfacePtr, backSurfacePtr, backSurface.pitch);
+			for (int i = textDrawableArea.top; i < area.bottom; i++) {
+				memcpy(activeSurfacePtr, backSurfacePtr, textWidth * backSurface.format.bytesPerPixel);
+				
 				activeSurfacePtr += _activeSurface->pitch;
 				backSurfacePtr += backSurface.pitch;
 			}
@@ -663,30 +684,8 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 		}
 
 		if (area.bottom > textDrawableArea.bottom) {
-			wasDrawInBackSurface = true;
-
-			Surface backSurface;
-			const Graphics::PixelFormat format(2, 5, 5, 5, 0, 10, 5, 0, 0);
-			backSurface.create(area.right - area.left, area.bottom - area.top, format);
-
-			//font->drawString(&backSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
-
-			// uint16 *ptr = (uint16 *)backSurface.getBasePtr(0, 0);
-			// // memset(ptr, 0xff, 1500);
-
-			// uint16 *destptr = (uint16 *)_activeSurface->getBasePtr(area.left, area.top);
-
-			// for (int z = 0; z < backSurface.h/*abs(textDrawableArea.top - area.top)*/; z++) {
-			// 	// debug("%d", area.right - area.left);
-  	// 			memcpy(destptr, ptr, backSurface.pitch/*area.right - area.left - deltax*/);
-   // 				destptr += _activeSurface->pitch;
-   // 				ptr += backSurface.pitch;
-			// }
-			// need copy to _activeSurface only visible part of string...
-			// hight of visible part = font->height - abs(textDrawable.bottom - area.bottom);
-
-			backSurface.free();
-			// debug("bottom = %d", area.bottom - textDrawableArea.bottom);			
+			wasDrawInBackSurface = true;			
+		
 		}
 
 		if (!wasDrawInBackSurface)
