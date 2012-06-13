@@ -677,15 +677,64 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 				backSurfacePtr += backSurface.pitch;
 			}
 
-			g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch / backSurface.format.bytesPerPixel, area.left, 0, backSurface.w, backSurface.h);
-			g_system->updateScreen();
+			// g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch / backSurface.format.bytesPerPixel, area.left, 0, backSurface.w, backSurface.h);
+			// g_system->updateScreen();
 
 			backSurface.free();
 		}
 
 		if (area.bottom > textDrawableArea.bottom) {
-			wasDrawInBackSurface = true;			
-		
+			wasDrawInBackSurface = true;
+
+			Surface backSurface;
+			backSurface.create(area.right - area.left, area.bottom - area.top, g_system->getOverlayFormat());
+			byte *activeSurfacePtr = (byte *)_activeSurface->getBasePtr(area.left, area.top);
+			byte *backSurfacePtr   = (byte *)backSurface.getBasePtr(0, 0);
+			for (int i = area.top; i < textDrawableArea.bottom; i++) {
+				memcpy(backSurfacePtr, activeSurfacePtr, backSurface.pitch);
+
+				activeSurfacePtr += _activeSurface->pitch;
+				backSurfacePtr += backSurface.pitch;
+			}
+
+			int textWidth = font->getStringWidth(text);
+
+			int emptySpace;
+			
+			switch (alignH) {
+				case Graphics::kTextAlignLeft:
+					emptySpace = 0;
+					break;
+				case Graphics::kTextAlignCenter:
+					emptySpace = (area.width() - textWidth) / 2;
+					break;
+				case Graphics::kTextAlignRight:
+					emptySpace =  area.right - textWidth - area.left;
+					debug("kTextAlignRight");
+					break;
+				// case Graphics::kTextAlignInvalid:
+				// 	warning("VectorRendererSpec<PixelType>::drawString(...) invalid text align");
+				// 	return;
+				default:
+					break;
+			}
+
+			font->drawString(&backSurface, text, 0, 0, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
+
+			activeSurfacePtr = (byte *)_activeSurface->getBasePtr(area.left + emptySpace, area.top);
+			backSurfacePtr = (byte *)backSurface.getBasePtr(emptySpace, 0);
+
+			for (int i = area.top; i < textDrawableArea.bottom ; i++) {
+				memcpy(activeSurfacePtr, backSurfacePtr, textWidth * backSurface.format.bytesPerPixel);
+				
+				activeSurfacePtr += _activeSurface->pitch;
+				backSurfacePtr += backSurface.pitch;
+			}
+
+			// g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch / backSurface.format.bytesPerPixel, area.left, 0, backSurface.w, backSurface.h);
+			// g_system->updateScreen();
+
+			backSurface.free();
 		}
 
 		if (!wasDrawInBackSurface)
