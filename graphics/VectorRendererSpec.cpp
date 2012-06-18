@@ -608,7 +608,6 @@ template<typename PixelType>
 void VectorRendererSpec<PixelType>::
 drawString(const Graphics::Font *font, const Common::String &text, const Common::Rect &area,
 			Graphics::TextAlign alignH, GUI::ThemeEngine::TextAlignVertical alignV, int deltax, bool ellipsis, const Common::Rect &textDrawableArea) {
-
 	int offset = area.top;
 
 	if (font->getFontHeight() < area.height()) {
@@ -624,6 +623,44 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 		}
 	}
 
+	deltax += 30;
+
+	int textWidth = font->getStringWidth(text);
+	int width = area.width()/* - deltax*/;
+
+/*
+	// обрезание по Х
+	if (textWidth > width) {
+		Surface backSurface;
+		backSurface.create(width, area.bottom - area.top, g_system->getOverlayFormat());
+
+		byte *activeSurfacePtr 	= (byte *)_activeSurface->getBasePtr(area.left, area.top);
+		byte *backSurfacePtr	= (byte *)backSurface.getBasePtr(0, 0);
+		for (int i = 0; i < backSurface.h; i++) {
+			memcpy(backSurfacePtr, activeSurfacePtr, backSurface.pitch);
+
+			activeSurfacePtr 	+= _activeSurface->pitch;
+			backSurfacePtr		+= backSurface.pitch;
+		}
+
+		font->drawString(&backSurface, text, 0, 0, width, _fgColor, alignH, deltax, ellipsis);
+
+		activeSurfacePtr	= (byte *)_activeSurface->getBasePtr(area.left, area.top);
+		backSurfacePtr		= (byte *)backSurface.getBasePtr(0, 0);
+		for(int i = 0; i < backSurface.h; i++) {
+			memcpy(activeSurfacePtr, backSurfacePtr, backSurface.pitch);
+
+			activeSurfacePtr 	+= _activeSurface->pitch;
+			backSurfacePtr		+= backSurface.pitch;
+		}
+
+		g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch / backSurface.format.bytesPerPixel, area.left, 0, backSurface.w, backSurface.h);
+		g_system->updateScreen();
+
+		backSurface.free();
+	}
+*/
+	
 	if (textDrawableArea.isEmpty()) {
 		font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
 	} else {		
@@ -643,7 +680,7 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 				backSurfacePtr += backSurface.pitch;
 			}
 
-			int textWidth = font->getStringWidth(text);
+			// int textWidth = font->getStringWidth(text);
 
 			int emptySpace;
 			
@@ -697,7 +734,7 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 				backSurfacePtr += backSurface.pitch;
 			}
 
-			int textWidth = font->getStringWidth(text);
+			// int textWidth = font->getStringWidth(text);
 
 			int emptySpace;
 			
