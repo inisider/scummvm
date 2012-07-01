@@ -623,44 +623,53 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 		}
 	}
 
-	deltax += 30;
-
-	int textWidth = font->getStringWidth(text);
-	int width = area.width()/* - deltax*/;
-
-/*
-	// обрезание по Х
-	if (textWidth > width) {
-		Surface backSurface;
-		backSurface.create(width, area.bottom - area.top, g_system->getOverlayFormat());
-
-		byte *activeSurfacePtr 	= (byte *)_activeSurface->getBasePtr(area.left, area.top);
-		byte *backSurfacePtr	= (byte *)backSurface.getBasePtr(0, 0);
-		for (int i = 0; i < backSurface.h; i++) {
-			memcpy(backSurfacePtr, activeSurfacePtr, backSurface.pitch);
-
-			activeSurfacePtr 	+= _activeSurface->pitch;
-			backSurfacePtr		+= backSurface.pitch;
-		}
-
-		font->drawString(&backSurface, text, 0, 0, width, _fgColor, alignH, deltax, ellipsis);
-
-		activeSurfacePtr	= (byte *)_activeSurface->getBasePtr(area.left, area.top);
-		backSurfacePtr		= (byte *)backSurface.getBasePtr(0, 0);
-		for(int i = 0; i < backSurface.h; i++) {
-			memcpy(activeSurfacePtr, backSurfacePtr, backSurface.pitch);
-
-			activeSurfacePtr 	+= _activeSurface->pitch;
-			backSurfacePtr		+= backSurface.pitch;
-		}
-
-		g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch / backSurface.format.bytesPerPixel, area.left, 0, backSurface.w, backSurface.h);
-		g_system->updateScreen();
-
-		backSurface.free();
+	int n = 0; // number of chars that fit in area.width()
+	int totalWidth = 0;
+	while ((n >= 0) && (n < text.size()) && (totalWidth <= area.width())) {
+		totalWidth += font->getCharWidth(text[n]);
+		n++;
 	}
-*/
-	
+	if ((n >= 0) && (n < text.size())) 
+		totalWidth += font->getCharWidth(text[n]);
+
+	debug("totalWidth = %d, areaWidth = %d", totalWidth, area.width());
+
+	Surface backSurface;
+	backSurface.create(totalWidth, area.height(), g_system->getOverlayFormat());
+
+	byte *activeSurfacePtr = (byte *)_activeSurface->getBasePtr(area.left, area.top);
+	byte *backSurfacePtr   = (byte *)backSurface.getBasePtr(0, 0);
+
+	// copy background...
+	for (int i = 0; i < backSurface.h; i++) {
+		memcpy(backSurfacePtr, activeSurfacePtr, backSurface.pitch);
+
+		activeSurfacePtr += _activeSurface->pitch;
+		backSurfacePtr   += backSurface.pitch;
+	}
+
+	font->drawString(&backSurface, text, 0, 0, totalWidth, _fgColor, alignH, deltax, ellipsis);
+
+	g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch / backSurface.format.bytesPerPixel, area.left, 0, backSurface.w, backSurface.h);
+	g_system->updateScreen();
+
+	// copy text from backSurface to activeSurface
+	activeSurfacePtr = (byte *)_activeSurface->getBasePtr(area.left, area.top);
+	backSurfacePtr	 = (byte *)backSurface.getBasePtr(0, 0);
+
+	for (int i = 0; i < backSurface.h; i++) {
+		memcpy(activeSurfacePtr, backSurfacePtr, backSurface.pitch);
+
+		activeSurfacePtr += _activeSurface->pitch;
+		backSurfacePtr 	 += backSurface.pitch;
+	}
+
+	backSurface.free();
+
+	// font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
+/*
+	int textWidth = font->getStringWidth(text);
+
 	if (textDrawableArea.isEmpty()) {
 		font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
 	} else {		
@@ -679,8 +688,6 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 				activeSurfacePtr += _activeSurface->pitch;
 				backSurfacePtr += backSurface.pitch;
 			}
-
-			// int textWidth = font->getStringWidth(text);
 
 			int emptySpace;
 			
@@ -777,6 +784,7 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 		if (!wasDrawInBackSurface)
 			font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
 	}
+	*/
 }
 
 /** LINES **/
