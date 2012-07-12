@@ -623,19 +623,35 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 		}
 	}
 
-	int n = 0; // number of chars that fit in area.width()
-	int totalWidth = 0;
-	while ((n >= 0) && (n < text.size()) && (totalWidth <= area.width())) {
-		totalWidth += font->getCharWidth(text[n]);
-		n++;
+	if (textDrawableArea.isEmpty()) {
+		font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
+		warning("there is no text drawable area. Please set this area for clipping");
+		return;
 	}
-	if ((n >= 0) && (n < text.size())) 
-		totalWidth += font->getCharWidth(text[n]);
 
-	debug("totalWidth = %d, areaWidth = %d", totalWidth, area.width());
+	int textWidth = font->getStringWidth(text);
+
+	int emptySpace;
+
+	switch (alignH) {
+		case Graphics::kTextAlignLeft:
+			emptySpace = 0;
+			break;
+		case Graphics::kTextAlignCenter:
+			emptySpace = (area.width() - textWidth) / 2;
+			break;
+		case Graphics::kTextAlignRight:
+			emptySpace =  area.right - textWidth;
+			break;
+		// case Graphics::kTextAlignInvalid:
+		// 	warning("VectorRendererSpec<PixelType>::drawString(...) invalid text align");
+		// 	return;
+		default:
+			break;
+	}
 
 	Surface backSurface;
-	backSurface.create(totalWidth, area.height(), g_system->getOverlayFormat());
+	backSurface.create(area.width(), font->getFontHeight(), g_system->getOverlayFormat());
 
 	byte *activeSurfacePtr = (byte *)_activeSurface->getBasePtr(area.left, area.top);
 	byte *backSurfacePtr   = (byte *)backSurface.getBasePtr(0, 0);
@@ -648,17 +664,29 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 		backSurfacePtr   += backSurface.pitch;
 	}
 
-	font->drawString(&backSurface, text, 0, 0, totalWidth, _fgColor, alignH, deltax, ellipsis);
+	font->drawString(&backSurface, text, 0, 0, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
 
-	g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch / backSurface.format.bytesPerPixel, area.left, 0, backSurface.w, backSurface.h);
-	g_system->updateScreen();
+	// g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch / backSurface.format.bytesPerPixel, area.left, 0, backSurface.w, backSurface.h);
+	// g_system->updateScreen();
+
+	int fromX 	= ((area.left + emptySpace) < textDrawableArea.left) ? textDrawableArea.left : area.left + emptySpace;
+	int toX		= ((area.right - emptySpace) > textDrawableArea.right) ? textDrawableArea.right : area.right - emptySpace;
+	
+	// if text drawable area don't have any text for clipping
+	if (fromX > toX)
+		return;
+
+	int bytesX 	= toX - fromX;
+
+	int fromY	= (area.top < textDrawableArea.top) ? textDrawableArea.top : area.top;
+	int toY 	= (textDrawableArea.bottom < area.bottom) ? textDrawableArea.bottom : area.bottom;  
 
 	// copy text from backSurface to activeSurface
-	activeSurfacePtr = (byte *)_activeSurface->getBasePtr(area.left, area.top);
-	backSurfacePtr	 = (byte *)backSurface.getBasePtr(0, 0);
+	activeSurfacePtr = (byte *)_activeSurface->getBasePtr(fromX, fromY);
+	backSurfacePtr	 = (byte *)backSurface.getBasePtr(fromX - area.left, fromY - area.top);
 
-	for (int i = 0; i < backSurface.h; i++) {
-		memcpy(activeSurfacePtr, backSurfacePtr, backSurface.pitch);
+	for (int i = fromY; i < toY; i++) {
+		memcpy(activeSurfacePtr, backSurfacePtr, bytesX * backSurface.format.bytesPerPixel);
 
 		activeSurfacePtr += _activeSurface->pitch;
 		backSurfacePtr 	 += backSurface.pitch;
@@ -666,125 +694,9 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 
 	backSurface.free();
 
-	// font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
-/*
-	int textWidth = font->getStringWidth(text);
-
-	if (textDrawableArea.isEmpty()) {
-		font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
-	} else {		
-		bool wasDrawInBackSurface = false;
-
-		if (textDrawableArea.top > area.top) {
-			wasDrawInBackSurface = true;
-
-			Surface backSurface;
-			backSurface.create(area.right - area.left, area.bottom - area.top, g_system->getOverlayFormat());
-			byte *activeSurfacePtr = (byte *)_activeSurface->getBasePtr(area.left, textDrawableArea.top);
-			byte *backSurfacePtr   = (byte *)backSurface.getBasePtr(0, 0);
-			for (int i = 0; i < backSurface.h; i++) {
-				memcpy(backSurfacePtr, activeSurfacePtr, backSurface.pitch);
-
-				activeSurfacePtr += _activeSurface->pitch;
-				backSurfacePtr += backSurface.pitch;
-			}
-
-			int emptySpace;
-			
-			switch (alignH) {
-				case Graphics::kTextAlignLeft:
-					emptySpace = 0;
-					break;
-				case Graphics::kTextAlignCenter:
-					emptySpace = (area.width() - textWidth) / 2;
-					break;
-				case Graphics::kTextAlignRight:
-					emptySpace =  area.right - textWidth - area.left;
-					debug("kTextAlignRight");
-					break;
-				// case Graphics::kTextAlignInvalid:
-				// 	warning("VectorRendererSpec<PixelType>::drawString(...) invalid text align");
-				// 	return;
-				default:
-					break;
-			}
-
-			font->drawString(&backSurface, text, 0, 0, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
-
-			activeSurfacePtr = (byte *)_activeSurface->getBasePtr(area.left + emptySpace, textDrawableArea.top);
-			backSurfacePtr = (byte *)backSurface.getBasePtr(emptySpace, abs(area.top - textDrawableArea.top));
-
-			for (int i = textDrawableArea.top; i < area.bottom; i++) {
-				memcpy(activeSurfacePtr, backSurfacePtr, textWidth * backSurface.format.bytesPerPixel);
-				
-				activeSurfacePtr += _activeSurface->pitch;
-				backSurfacePtr += backSurface.pitch;
-			}
-
-			// g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch / backSurface.format.bytesPerPixel, area.left, 0, backSurface.w, backSurface.h);
-			// g_system->updateScreen();
-
-			backSurface.free();
-		}
-
-		if (area.bottom > textDrawableArea.bottom) {
-			wasDrawInBackSurface = true;
-
-			Surface backSurface;
-			backSurface.create(area.right - area.left, area.bottom - area.top, g_system->getOverlayFormat());
-			byte *activeSurfacePtr = (byte *)_activeSurface->getBasePtr(area.left, area.top);
-			byte *backSurfacePtr   = (byte *)backSurface.getBasePtr(0, 0);
-			for (int i = area.top; i < textDrawableArea.bottom; i++) {
-				memcpy(backSurfacePtr, activeSurfacePtr, backSurface.pitch);
-
-				activeSurfacePtr += _activeSurface->pitch;
-				backSurfacePtr += backSurface.pitch;
-			}
-
-			// int textWidth = font->getStringWidth(text);
-
-			int emptySpace;
-			
-			switch (alignH) {
-				case Graphics::kTextAlignLeft:
-					emptySpace = 0;
-					break;
-				case Graphics::kTextAlignCenter:
-					emptySpace = (area.width() - textWidth) / 2;
-					break;
-				case Graphics::kTextAlignRight:
-					emptySpace =  area.right - textWidth - area.left;
-					debug("kTextAlignRight");
-					break;
-				// case Graphics::kTextAlignInvalid:
-				// 	warning("VectorRendererSpec<PixelType>::drawString(...) invalid text align");
-				// 	return;
-				default:
-					break;
-			}
-
-			font->drawString(&backSurface, text, 0, 0, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
-
-			activeSurfacePtr = (byte *)_activeSurface->getBasePtr(area.left + emptySpace, area.top);
-			backSurfacePtr = (byte *)backSurface.getBasePtr(emptySpace, 0);
-
-			for (int i = area.top; i < textDrawableArea.bottom ; i++) {
-				memcpy(activeSurfacePtr, backSurfacePtr, textWidth * backSurface.format.bytesPerPixel);
-				
-				activeSurfacePtr += _activeSurface->pitch;
-				backSurfacePtr += backSurface.pitch;
-			}
-
-			// g_system->copyRectToOverlay((OverlayColor *)backSurface.pixels, backSurface.pitch / backSurface.format.bytesPerPixel, area.left, 0, backSurface.w, backSurface.h);
-			// g_system->updateScreen();
-
-			backSurface.free();
-		}
-
-		if (!wasDrawInBackSurface)
-			font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
-	}
-	*/
+	// remove after testing...
+	// this i need to see boundes in what i will see text that was clipped
+	_activeSurface->frameRect(textDrawableArea, 55); 
 }
 
 /** LINES **/

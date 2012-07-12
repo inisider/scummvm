@@ -164,7 +164,7 @@ void AboutDialog::drawDialog() {
 //	g_gui.theme()->setDrawArea(Common::Rect(_x, _y, _x+_w, _y+_h));
 	Dialog::drawDialog();
 
-	setTextDrawableArea(Common::Rect(_x, _y, _x + _w, _y + _h)); // further U can use _textDrawableArea
+	setTextDrawableArea(Common::Rect(_x + 100, _y, _x + 100 + 90 /*+ _w*/, _y + _h)); // further U can use _textDrawableArea
 
 	// Draw text
 	// TODO: Add a "fade" effect for the top/bottom text lines
@@ -223,7 +223,7 @@ void AboutDialog::drawDialog() {
 				str++;
 
 		if (*str)
-			g_gui.theme()->drawText(Common::Rect(_x + _xOff, y, _x + 159/*_w*/ - _xOff, y + g_gui.theme()->getFontHeight()), str, state, align, ThemeEngine::kTextInversionNone, 0, false, ThemeEngine::kFontStyleBold, ThemeEngine::kFontColorNormal, true, _textDrawableArea);
+			g_gui.theme()->drawText(Common::Rect(_x + _xOff, y, _x + _w - _xOff, y + g_gui.theme()->getFontHeight()), str, state, align, ThemeEngine::kTextInversionNone, 0, false, ThemeEngine::kFontStyleBold, ThemeEngine::kFontColorNormal, true, _textDrawableArea);
 		y += _lineHeight;
 	}
 }
