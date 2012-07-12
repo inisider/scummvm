@@ -650,6 +650,10 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 			break;
 	}
 
+	// if text drawable area don't have any text for clipping
+	if ((textDrawableArea.right < (area.left + emptySpace)) || (textDrawableArea.left > (area.right - emptySpace)))
+		return;
+
 	Surface backSurface;
 	backSurface.create(area.width(), font->getFontHeight(), g_system->getOverlayFormat());
 
@@ -672,10 +676,6 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 	int fromX 	= ((area.left + emptySpace) < textDrawableArea.left) ? textDrawableArea.left : area.left + emptySpace;
 	int toX		= ((area.right - emptySpace) > textDrawableArea.right) ? textDrawableArea.right : area.right - emptySpace;
 	
-	// if text drawable area don't have any text for clipping
-	if (fromX > toX)
-		return;
-
 	int bytesX 	= toX - fromX;
 
 	int fromY	= (area.top < textDrawableArea.top) ? textDrawableArea.top : area.top;
