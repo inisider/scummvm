@@ -623,6 +623,8 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 		}
 	}
 
+	_activeSurface->frameRect(area, 77);
+
 	if (textDrawableArea.isEmpty()) {
 		font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
 		warning("there is no text drawable area. Please set this area for clipping");

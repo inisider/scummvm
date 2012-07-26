@@ -266,6 +266,15 @@ void EditableWidget::drawCaret(bool erase) {
 	if (y < 0 || y + editRect.height() - 2 >= _h)
 		return;
 
+	if ((uint)_caretPos >= _editString.size()) {
+		return;
+	}
+
+	int charWidth = g_gui.getCharWidth(_editString[_caretPos], _font);
+	if (x < 0 || x + charWidth >= editRect.right) {
+		return;
+	}
+
 	x += getAbsX();
 	y += getAbsY();
 
