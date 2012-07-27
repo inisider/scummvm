@@ -623,7 +623,7 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 		}
 	}
 
-	_activeSurface->frameRect(area, 77);
+	// _activeSurface->frameRect(area, 77);
 
 	if (textDrawableArea.isEmpty()) {
 		font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
@@ -698,7 +698,7 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 
 	// remove after testing...
 	// this i need to see boundes in what i will see text that was clipped
-	_activeSurface->frameRect(textDrawableArea, 55); 
+	// _activeSurface->frameRect(textDrawableArea, 55); 
 }
 
 /** LINES **/
