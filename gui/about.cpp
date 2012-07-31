@@ -164,7 +164,7 @@ void AboutDialog::drawDialog() {
 //	g_gui.theme()->setDrawArea(Common::Rect(_x, _y, _x+_w, _y+_h));
 	Dialog::drawDialog();
 
-	setTextDrawableArea(Common::Rect(_x, _y, _x + _w, _y + _h)); // further U can use _textDrawableArea
+	setTextDrawableArea(Common::Rect(_x, _y, _x + _w, _y + _h + 1)); // further U can use _textDrawableArea
 
 	// Draw text
 	// TODO: Add a "fade" effect for the top/bottom text lines
