@@ -48,6 +48,8 @@ void EditableWidget::init() {
 
 	_font = ThemeEngine::kFontStyleBold;
 	_inversion = ThemeEngine::kTextInversionNone;
+
+	_indexOffset = 0;
 }
 
 EditableWidget::~EditableWidget() {
@@ -290,29 +292,37 @@ bool EditableWidget::setCaretPos(int newPos) {
 	return adjustOffset();
 }
 
+int EditableWidget::getEditOffset() {
+	int offset = 0;
+
+	uint last = 0;
+	for (int i = 0; i < _indexOffset; ++i) {
+		const uint cur = _editString[i];
+		offset += g_gui.getCharWidth(cur, _font) + g_gui.getKerningOffset(last, cur, _font);
+		last = cur;
+	}
+
+	return offset;
+}
+
 bool EditableWidget::adjustOffset() {
 	// check if the caret is still within the textbox; if it isn't,
 	// adjust _editScrollOffset
-
 	int caretpos = getCaretOffset();
 	const int editWidth = getEditRect().width();
 
 	if (caretpos < 0) {
-		// scroll left
-		_editScrollOffset += caretpos;
+		_indexOffset--;
+
+		_editScrollOffset = getEditOffset();
+
 		return true;
 	} else if (caretpos >= editWidth) {
-		// scroll right
-		_editScrollOffset -= (editWidth - caretpos);
+		_indexOffset++;
+
+		_editScrollOffset = getEditOffset();
+
 		return true;
-	} else if (_editScrollOffset > 0) {
-		const int strWidth = g_gui.getStringWidth(_editString, _font);
-		if (strWidth - _editScrollOffset < editWidth) {
-			// scroll right
-			_editScrollOffset = (strWidth - editWidth);
-			if (_editScrollOffset < 0)
-				_editScrollOffset = 0;
-		}
 	}
 
 	return false;

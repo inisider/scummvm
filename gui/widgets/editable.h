@@ -58,6 +58,8 @@ protected:
 
 	ThemeEngine::TextInversionState  _inversion;
 
+	int 		_indexOffset;
+
 public:
 	EditableWidget(GuiObject *boss, int x, int y, int w, int h, const char *tooltip = 0, uint32 cmd = 0);
 	EditableWidget(GuiObject *boss, const String &name, const char *tooltip = 0, uint32 cmd = 0);
@@ -83,6 +85,7 @@ protected:
 	void drawCaret(bool erase);	
 	bool adjustOffset();
 	void makeCaretVisible();
+	int getEditOffset();	
 
 	void defaultKeyDownHandler(Common::KeyState &state, bool &dirty, bool &forcecaret, bool &handled);
 

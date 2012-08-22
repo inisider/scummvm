@@ -624,6 +624,7 @@ drawString(const Graphics::Font *font, const Common::String &text, const Common:
 	}
 
 	// _activeSurface->frameRect(area, 77);
+	// _activeSurface->vLine(area.left, offset, area.bottom, 77);
 
 	if (textDrawableArea.isEmpty()) {
 		font->drawString(_activeSurface, text, area.left, offset, area.width() - deltax, _fgColor, alignH, deltax, ellipsis);
