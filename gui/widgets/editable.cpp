@@ -50,6 +50,7 @@ void EditableWidget::init() {
 	_inversion = ThemeEngine::kTextInversionNone;
 
 	_indexOffset = 0;
+	_offset = 0;
 }
 
 EditableWidget::~EditableWidget() {
@@ -288,7 +289,11 @@ void EditableWidget::drawCaret(bool erase) {
 
 bool EditableWidget::setCaretPos(int newPos) {
 	assert(newPos >= 0 && newPos <= (int)_editString.size());
+
+	_offset = (newPos - _caretPos);
+
 	_caretPos = newPos;
+
 	return adjustOffset();
 }
 
@@ -308,17 +313,38 @@ int EditableWidget::getEditOffset() {
 bool EditableWidget::adjustOffset() {
 	// check if the caret is still within the textbox; if it isn't,
 	// adjust _editScrollOffset
+
 	int caretpos = getCaretOffset();
 	const int editWidth = getEditRect().width();
 
-	if (caretpos < 0) {
-		_indexOffset--;
+	if ((caretpos < 0) || (caretpos >= editWidth)) {
+		if (_offset == -1) // scroll left
+			_indexOffset--;
 
-		_editScrollOffset = getEditOffset();
+		if (_offset == 1) // scroll right
+			_indexOffset++;
 
-		return true;
-	} else if (caretpos >= editWidth) {
-		_indexOffset++;
+		if (_offset > 1) { // scroll to end of string
+			int offset = 0;
+			int i = _editString.size() - 1;
+			uint last = 0;
+
+			while (offset <= editWidth) {
+				const uint cur = _editString[i];
+				offset += g_gui.getCharWidth(cur, _font) + g_gui.getKerningOffset(last, cur, _font);
+				last = cur;
+
+				i--;
+			}
+
+			_indexOffset = i + 1;
+			_caretPos = _editString.size() - 1;
+		}
+
+		if (_offset < -1) { // scroll to start of string
+			_indexOffset = 0;
+			_caretPos = 0;
+		}
 
 		_editScrollOffset = getEditOffset();
 

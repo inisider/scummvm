@@ -59,6 +59,7 @@ protected:
 	ThemeEngine::TextInversionState  _inversion;
 
 	int 		_indexOffset;
+	int 		_offset;
 
 public:
 	EditableWidget(GuiObject *boss, int x, int y, int w, int h, const char *tooltip = 0, uint32 cmd = 0);
